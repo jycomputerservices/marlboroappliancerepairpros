@@ -120,7 +120,36 @@
             });
           }
         } else {
-          alert(json.errors ? json.errors.join('\n') : 'Something went wrong. Please call us directly.');
+          console.log('Form error response:', json.errors);
+          // Clear previous errors
+          form.querySelectorAll('.form-error-msg').forEach(msg => msg.classList.remove('show'));
+          form.querySelectorAll('[required]').forEach(f => f.classList.remove('error'));
+
+          if (json.errors && typeof json.errors === 'object') {
+            // Server returned field-level errors object
+            console.log('Processing field-level errors...');
+            Object.entries(json.errors).forEach(([fieldName, errorMsg]) => {
+              console.log(`Field: ${fieldName}, Error: ${errorMsg}`);
+              const field = form.querySelector(`[name="${fieldName}"]`);
+              console.log(`Found field:`, field);
+              if (field) {
+                field.classList.add('error');
+                const group = field.closest('.form-group');
+                console.log(`Found group:`, group);
+                const errorEl = group?.querySelector('.form-error-msg');
+                console.log(`Found error element:`, errorEl);
+                if (errorEl) {
+                  errorEl.textContent = errorMsg;
+                  errorEl.classList.add('show');
+                  console.log(`Updated error element. Text:`, errorEl.textContent, 'Classes:', errorEl.className);
+                }
+              }
+            });
+            const firstErr = form.querySelector('.error');
+            if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } else {
+            alert('Something went wrong. Please call us directly.');
+          }
           if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
         }
       } catch {

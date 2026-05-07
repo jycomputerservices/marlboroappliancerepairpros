@@ -71,7 +71,7 @@ app.use((req, res, next) => {
 // falling back to a single env var (which defaults to localhost in production if
 // SITE_URL is missing, and also trusts any port on that host).
 const ALLOWED_ORIGINS = new Set(
-  [process.env.SITE_URL, 'http://localhost:3005', 'http://127.0.0.1:3005']
+  [process.env.SITE_URL, 'http://localhost:3005', 'http://127.0.0.1:3005', 'http://localhost:3006', 'http://127.0.0.1:3006']
     .filter(Boolean)
 );
 
@@ -218,16 +218,22 @@ app.post('/api/submit-lead', formLimiter, async (req, res) => {
     }
   }
 
-  // Input validation
-  const errors = [];
-  if (!name || name.trim().length < 2 || name.trim().length > 80)   errors.push('Valid name required');
-  if (!phone || !/^[\d\s\(\)\-\+\.]{7,20}$/.test(phone))            errors.push('Valid phone number required');
-  if (!appliance || appliance.trim().length < 2)                     errors.push('Appliance type required');
-  if (!issue || issue.trim().length < 5 || issue.trim().length > 500) errors.push('Issue description required');
-  if (!zip || !/^\d{5}(-\d{4})?$/.test(zip.trim()))                 errors.push('Valid ZIP code required');
-  if (!consent)                                                       errors.push('Consent required');
+  // Input validation with field-specific error messages
+  const errors = {};
+  if (!name || name.trim().length < 2 || name.trim().length > 80)
+    errors.name = 'Please enter a valid name (2-80 characters)';
+  if (!phone || !/^[\d\s\(\)\-\+\.]{7,20}$/.test(phone))
+    errors.phone = 'Please enter a valid phone number';
+  if (!appliance || appliance.trim().length < 2)
+    errors.appliance = 'Please select an appliance';
+  if (!issue || issue.trim().length < 5 || issue.trim().length > 500)
+    errors.issue = issue && issue.trim().length < 5 ? 'Please describe the issue (minimum 5 characters)' : 'Issue description too long (max 500 characters)';
+  if (!zip || !/^\d{5}(-\d{4})?$/.test(zip.trim()))
+    errors.zip = 'Please enter a valid ZIP code (e.g., 07746)';
+  if (!consent)
+    errors.consent = 'Please agree to be contacted';
 
-  if (errors.length > 0) {
+  if (Object.keys(errors).length > 0) {
     return res.status(400).json({ success: false, errors });
   }
 

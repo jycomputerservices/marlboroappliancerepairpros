@@ -320,8 +320,8 @@ p  { margin-bottom: 1rem; }
 .form-group select.error,
 .form-group textarea.error { border-color: var(--error); }
 .form-group textarea { resize: vertical; min-height: 80px; }
-.form-error-msg { display: none; font-size: 0.78rem; color: var(--error); margin-top: 4px; }
-.form-error-msg.show { display: block; }
+.form-error-msg { display: none !important; font-size: 0.78rem; color: var(--error); margin-top: 4px; font-weight: 500; }
+.form-error-msg.show { display: block !important; }
 .form-consent {
   display: flex; gap: 10px; align-items: flex-start;
   font-size: 0.78rem; color: var(--text-muted); margin: 12px 0;
