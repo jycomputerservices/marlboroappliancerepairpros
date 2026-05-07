@@ -125,8 +125,19 @@ app.get('/js/config.js', (req, res) => {
 
 // ─── Dynamic HTML serving (inject phone number from .env) ──────────────────
 const fs = require('fs');
-app.get('*.html', (req, res, next) => {
-  const filePath = path.join(__dirname, 'public', req.path);
+const injectPhoneNumber = (req, res, next) => {
+  let filePath = path.join(__dirname, 'public', req.path);
+
+  // Handle root path → index.html
+  if (req.path === '/') {
+    filePath = path.join(__dirname, 'public', 'index.html');
+  }
+
+  // Only process HTML files
+  if (!filePath.endsWith('.html')) {
+    return next();
+  }
+
   if (fs.existsSync(filePath)) {
     const html = fs.readFileSync(filePath, 'utf8');
     const phoneNumber = process.env.BUSINESS_PHONE || '(732) 555-0101';
@@ -139,11 +150,13 @@ app.get('*.html', (req, res, next) => {
       .replace(/7325550\d{3}/g, phoneDigitsOnly);
 
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.send(updated);
-  } else {
-    next();
+    return res.send(updated);
   }
-});
+  next();
+};
+
+app.get('/', injectPhoneNumber);
+app.get(/\.html$/, injectPhoneNumber);
 
 // ─── Static Files ──────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public'), {
