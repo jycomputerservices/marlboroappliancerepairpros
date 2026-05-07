@@ -123,6 +123,28 @@ app.get('/js/config.js', (req, res) => {
   res.send(`window.__PHONE__ = "${process.env.BUSINESS_PHONE || '(732) 555-0101'}";`);
 });
 
+// ─── Dynamic HTML serving (inject phone number from .env) ──────────────────
+const fs = require('fs');
+app.get('*.html', (req, res, next) => {
+  const filePath = path.join(__dirname, 'public', req.path);
+  if (fs.existsSync(filePath)) {
+    const html = fs.readFileSync(filePath, 'utf8');
+    const phoneNumber = process.env.BUSINESS_PHONE || '(732) 555-0101';
+    const phoneDigitsOnly = phoneNumber.replace(/\D/g, '');
+
+    // Replace all phone number variations with current .env value
+    const updated = html
+      .replace(/\(732\)\s*555-0\d{3}/g, phoneNumber)
+      .replace(/732555-0\d{3}/g, phoneNumber.replace(/[^\d]/g, ''))
+      .replace(/7325550\d{3}/g, phoneDigitsOnly);
+
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.send(updated);
+  } else {
+    next();
+  }
+});
+
 // ─── Static Files ──────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public'), {
   maxAge: '7d',
