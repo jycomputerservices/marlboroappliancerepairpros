@@ -207,6 +207,29 @@
   style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite}';
   document.head.appendChild(style);
 
+  // ─── Sticky Mobile CTA Visibility ──────────────────────────────
+  // Show sticky CTA after user scrolls past hero section
+  if (window.innerWidth < 768) {
+    const mobileCtaBar = document.querySelector('.mobile-cta-bar');
+    const pageHero = document.querySelector('.page-hero');
+
+    if (mobileCtaBar && pageHero) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) {
+            // Hero is out of view, show sticky CTA
+            mobileCtaBar.style.display = 'flex';
+          } else {
+            // Hero is visible, hide sticky CTA
+            mobileCtaBar.style.display = 'none';
+          }
+        });
+      }, { threshold: 0 });
+
+      observer.observe(pageHero);
+    }
+  }
+
   // ─── Phone number injection ──────────────────────────────────
   // Replace data-phone placeholders with the real phone from config
   const phoneEls = document.querySelectorAll('[data-phone]');
