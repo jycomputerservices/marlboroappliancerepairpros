@@ -116,6 +116,13 @@ app.use(globalLimiter);
 app.use(express.json({ limit: '16kb' }));
 app.use(express.urlencoded({ extended: false, limit: '16kb' }));
 
+// ─── Dynamic Config (phone number from .env) ──────────────────────────────
+app.get('/js/config.js', (req, res) => {
+  res.set('Content-Type', 'application/javascript');
+  res.set('Cache-Control', 'no-cache');
+  res.send(`window.__PHONE__ = "${process.env.BUSINESS_PHONE || '(732) 555-0101'}";`);
+});
+
 // ─── Static Files ──────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public'), {
   maxAge: '7d',
