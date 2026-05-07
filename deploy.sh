@@ -26,7 +26,10 @@ info "Starting deployment — environment: ${ENVIRONMENT}"
 command -v node  &>/dev/null || error "Node.js is not installed. Install Node.js 18+ first."
 command -v npm   &>/dev/null || error "npm is not installed."
 command -v nginx &>/dev/null || warn "nginx not found — skipping nginx config."
-command -v pm2   &>/dev/null || { warn "pm2 not found — installing globally..."; npm install -g pm2; }
+if ! command -v pm2 &>/dev/null; then
+  warn "pm2 not found — installing globally..."
+  npm install -g pm2 2>/dev/null || { warn "Failed to install pm2 globally, trying with sudo..."; sudo npm install -g pm2; }
+fi
 
 NODE_VERSION=$(node -v | grep -oE '[0-9]+' | head -1)
 if [ "$NODE_VERSION" -lt 18 ]; then
