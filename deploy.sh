@@ -75,6 +75,37 @@ if [ ! -d "${LOG_DIR}" ] || [ ! -w "${LOG_DIR}" ]; then
   mkdir -p "${LOG_DIR}"
 fi
 
+# ─── Kill Existing Process on Port 3005 ──────────────────────────────────────
+PORT="${PORT:-3005}"
+info "Checking for existing process on port ${PORT}..."
+
+# Find PID listening on the specified port
+EXISTING_PID=$(lsof -ti:${PORT} 2>/dev/null || true)
+
+if [ -n "$EXISTING_PID" ]; then
+  info "Found process on port ${PORT} (PID: ${EXISTING_PID}). Terminating..."
+  kill -TERM "$EXISTING_PID" 2>/dev/null || true
+
+  # Wait for graceful shutdown (up to 5 seconds)
+  for i in {1..5}; do
+    if ! kill -0 "$EXISTING_PID" 2>/dev/null; then
+      success "Process ${EXISTING_PID} terminated gracefully."
+      break
+    fi
+    sleep 1
+  done
+
+  # Force kill if still running
+  if kill -0 "$EXISTING_PID" 2>/dev/null; then
+    warn "Process did not terminate gracefully. Force killing..."
+    kill -9 "$EXISTING_PID" 2>/dev/null || true
+    success "Process ${EXISTING_PID} force killed."
+  fi
+
+  # Brief pause to ensure port is fully released
+  sleep 1
+fi
+
 # ─── PM2 Process Management ───────────────────────────────────────────────────
 info "Starting/restarting app with PM2..."
 if pm2 describe "${APP_NAME}" &>/dev/null; then
