@@ -340,13 +340,18 @@ app.use((req, res) => {
 // ─── Port Management (auto-increment if in use) ────────────────────────────
 function findAvailablePort(startPort, callback) {
   const server = net.createServer();
-  server.listen(startPort, () => {
+  server.listen(startPort, '127.0.0.1', () => {
     server.close(() => callback(null, startPort));
   });
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
       console.log(`[server] Port ${startPort} in use, trying ${startPort + 1}...`);
-      findAvailablePort(startPort + 1, callback);
+      // FIX (MEDIUM): Add delay before retrying to allow TIME_WAIT to clear.
+      // When a port is closed, the OS keeps it in TIME_WAIT state briefly.
+      // This 500ms delay ensures the port is fully released before retry.
+      setTimeout(() => {
+        findAvailablePort(startPort + 1, callback);
+      }, 500);
     } else {
       callback(err);
     }
