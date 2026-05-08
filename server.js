@@ -143,8 +143,10 @@ const injectPhoneNumber = (req, res, next) => {
     const phoneNumber = process.env.BUSINESS_PHONE || '(732) 555-0101';
     const phoneDigitsOnly = phoneNumber.replace(/\D/g, '');
 
-    // Replace all phone number variations with current .env value
+    // Replace all phone number placeholders and variations with current .env value
     const updated = html
+      .replace(/__PHONE__/g, phoneNumber)
+      .replace(/__PHONE_DIGITS__/g, phoneDigitsOnly)
       .replace(/\(732\)\s*555-0\d{3}/g, phoneNumber)
       .replace(/732555-0\d{3}/g, phoneNumber.replace(/[^\d]/g, ''))
       .replace(/7325550\d{3}/g, phoneDigitsOnly);
